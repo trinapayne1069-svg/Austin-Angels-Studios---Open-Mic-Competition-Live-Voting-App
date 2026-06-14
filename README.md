@@ -1,0 +1,2 @@
+# Austin-Angels-Studios---Open-Mic-Competition-Live-Voting-App
+Austin Angels Studios - Open Mic Competition Live Voting App **Overview:** Built for the underground hip-hop culture and the raw, high-stakes energy of live MC battles, the Austin Angels Studios Live Voting App is a mobile-first web application designed to put the power of the crowd directly into the venue's hands. During a live, head-to-head perfo
