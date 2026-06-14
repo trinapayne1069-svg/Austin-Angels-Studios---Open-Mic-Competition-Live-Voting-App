@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Austin Angels Studios - Live Vote</title>
+    <!-- Tailwind CSS for rapid styling -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        body {
+            background-color: #121212;
+            color: #e5e5e5;
+            font-family: 'Impact', 'Arial Black', sans-serif;
+        }
+        .gritty-bg {
+            background: linear-gradient(rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.85)), 
+                        url('your-gritty-background-image.jpg') center/cover no-repeat;
+        }
+    </style>
+</head>
+<body class="gritty-bg min-h-screen flex flex-col justify-between items-center p-4">
+
+    <!-- HEADER / LOGO AREA -->
+    <header class="text-center mt-6 w-full">
+        <h1 class="text-3xl tracking-wider text-amber-500 uppercase font-black drop-shadow-[0_2px_4px_rgba(234,179,8,0.3)]">
+            Austin Angels Studios
+        </h1>
+        <p class="text-sm tracking-widest text-zinc-400 uppercase font-sans font-bold">Open Mic Competition</p>
+    </header>
+
+    <!-- MAIN INTERACTION ZONE -->
+    <main class="w-full max-w-md flex flex-col items-center justify-center my-auto gap-6">
+        
+        <!-- Status Notification Box -->
+        <div id="status-msg" class="hidden text-center p-3 rounded bg-zinc-800 border border-zinc-700 text-zinc-300 w-full font-sans text-sm"></div>
+
+        <!-- Voting Buttons Container -->
+        <div id="voting-zone" class="w-full flex flex-col gap-4">
+            
+            <!-- ACT 1 BUTTON (FLOW KILLA) -->
+            <button onclick="submitVote('Act 1')" class="group relative w-full py-8 bg-zinc-900 border-2 border-cyan-500 rounded-xl transition-all duration-200 active:scale-95 cursor-pointer overflow-hidden shadow-[0_0_15px_rgba(6,182,212,0.15)]">
+                <span class="absolute inset-0 bg-cyan-500 opacity-0 group-active:opacity-20 transition-opacity"></span>
+                <span class="text-4xl text-cyan-400 block tracking-wide">ACT 1</span>
+                <span class="text-xs font-sans text-cyan-200 tracking-widest uppercase font-bold">Flow Killa</span>
+            </button>
+
+            <div class="text-center text-zinc-600 text-xl font-black italic tracking-widest my-1">VS</div>
+
+            <!-- ACT 2 BUTTON (LYRICAL BEAST) -->
+            <button onclick="submitVote('Act 2')" class="group relative w-full py-8 bg-zinc-900 border-2 border-pink-500 rounded-xl transition-all duration-200 active:scale-95 cursor-pointer overflow-hidden shadow-[0_0_15px_rgba(236,72,153,0.15)]">
+                <span class="absolute inset-0 bg-pink-500 opacity-0 group-active:opacity-20 transition-opacity"></span>
+                <span class="text-4xl text-pink-500 block tracking-wide">ACT 2</span>
+                <span class="text-xs font-sans text-pink-200 tracking-widest uppercase font-bold">Lyrical Beast</span>
+            </button>
+            
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="mb-4 text-center text-xs text-zinc-500 font-sans font-bold tracking-wider">
+        LIVE IN-HOUSE AUDIENCE VOTE ONLY
+    </footer>
+
+    <!-- CLIENT SIDE LOGIC -->
+    <script>
+        // On page load, verify if this device already voted
+        window.onload = function() {
+            if (localStorage.getItem('hasVotedAAS')) {
+                disableVoting("You have already submitted your live ballot!");
+            }
+        };
+
+        async function submitVote(choice) {
+            const votingZone = document.getElementById('voting-zone');
+            const statusMsg = document.getElementById('status-msg');
+            
+            // Optimistically lock interface
+            votingZone.classList.add('opacity-50', 'pointer-events-none');
+            
+            try {
+                // Send vote payload to backend
+                const response = await fetch('/api/vote', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        voteSelection: choice,
+                        // Basic tracking payload (complemented by backend checks)
+                        voterToken: localStorage.getItem('voterToken') || generateVoterToken()
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    localStorage.setItem('hasVotedAAS', 'true');
+                    disableVoting(`Vote locked in for ${choice}! Thank you.`);
+                } else {
+                    // Handle server-side rejection (e.g. duplicate IP or token)
+                    statusMsg.innerText = data.error || "Voting error occurred.";
+                    statusMsg.classList.remove('hidden', 'bg-zinc-800');
+                    statusMsg.classList.add('bg-red-950', 'text-red-400', 'border-red-800');
+                    votingZone.classList.remove('opacity-50', 'pointer-events-none');
+                }
+
+            } catch (err) {
+                console.error("Network error submitting vote:", err);
+                votingZone.classList.remove('opacity-50', 'pointer-events-none');
+            }
+        }
+
+        function disableVoting(message) {
+            document.getElementById('voting-zone').style.display = 'none';
+            const statusMsg = document.getElementById('status-msg');
+            statusMsg.innerText = message;
+            statusMsg.classList.remove('hidden');
+        }
+
+        function generateVoterToken() {
+            const token = 'aas-' + Math.random().toString(36).substring(2, 15);
+            localStorage.setItem('voterToken', token);
+            return token;
+        }
+    </script>
+</body>
+</html>
